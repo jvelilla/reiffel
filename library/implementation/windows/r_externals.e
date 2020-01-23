@@ -1,17 +1,22 @@
 note
-	description: "Summary description for {R_API}."
+	description: "Summary description for {R_EXTERNALS}."
 	date: "$Date$"
 	revision: "$Revision$"
 
 class
-	R_API
+	R_EXTERNALS
 
 inherit
 
+	R_EXTERNALS_I
+		undefine
+			default_create
+		end
 	ANY
 		redefine
 			default_create
 		end
+
 
 create
 	default_create
@@ -50,204 +55,177 @@ feature {NONE} -- Initialization
 
 feature -- Status Report
 
-	is_r_installed: BOOLEAN
+	is_api_available: BOOLEAN
 		do
 			Result := not item.is_default_pointer
 		end
-
-	has_error: BOOLEAN
-			-- the last operation was successful?
-			--| TODO better error handling.
 
 feature -- Access
 
 	item: POINTER
 			-- R handle.
 
+feature -- Intialization
+
 	init_embedded_r_default
 			-- Intialize the embedded R environment in silent mode.
 		local
 			r: INTEGER
 		do
-			if is_r_installed then
-				r := R_initEmbeddedR_default (item)
-			end
+			r := R_initEmbeddedR_default (item)
 		end
 
 	end_embedded_r
 			-- Release R environment
 		do
-			if is_r_installed then
-				Rf_endEmbeddedR (item)
-			end
+			Rf_endEmbeddedR (item)
 		end
 
-	start_time
+feature -- Access: Rembedded
+
+	set_start_time
 		do
-			if is_r_installed then
-				R_setStartTime (item)
-			end
+			R_setStartTime (item)
 		end
+
+
+feature -- Access: Rinternals Function.
 
 	dll_version: STRING
+			-- only for Windows.
 		local
 			l_ptr: POINTER
 		do
-			if is_r_installed then
-				l_ptr := getDLLVersion (item)
-				if l_ptr /= default_pointer then
-					Result := (create {C_STRING}.make_by_pointer (l_ptr)).string
-				else
-					Result := "Unknown"
-				end
-			else
-				Result := "Unknown"
+			Result := "Unknown"
+			l_ptr := getDLLVersion (item)
+			if l_ptr /= default_pointer then
+				Result := (create {C_STRING}.make_by_pointer (l_ptr)).string
 			end
 		end
 
-	Rf_install (a_str: STRING): R_SEXP
+	install (a_str: STRING): R_SEXP
 		local
 			c_str: C_STRING
 			l_ptr: POINTER
 		do
-			has_error := False
 			create Result.make
-			if is_r_installed then
-				create c_str.make (a_str)
-				l_ptr := crf_install (item, c_str.item)
-				if l_ptr /= default_pointer then
-					create Result.make_by_pointer (l_ptr)
-				else
-					has_error := True
-				end
+			create c_str.make (a_str)
+			l_ptr := Rf_install (item, c_str.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
 			end
 		end
 
-	Rf_mkString (a_str: STRING): R_SEXP
+	lang2 (a_sexp1, a_sexp2: R_SEXP): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := Rf_lang2 (item, a_sexp1.item, a_sexp2.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	mk_string (a_str: STRING): R_SEXP
 		local
 			c_str: C_STRING
 			l_ptr: POINTER
 		do
-			has_error := False
 			create Result.make
-			if is_r_installed then
-				create c_str.make (a_str)
-				l_ptr := crf_mkstring (item, c_str.item)
-				if l_ptr /= default_pointer then
-					create Result.make_by_pointer (l_ptr)
-				else
-					has_error := True
-				end
+			create c_str.make (a_str)
+			l_ptr := Rf_mkString (item, c_str.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
 			end
 		end
 
-	Rf_lang2 (a_sexp1, a_sexp2: R_SEXP): R_SEXP
+	alloc_vector (a_type: INTEGER_64; a_len: INTEGER_64): R_SEXP
 		local
 			l_ptr: POINTER
 		do
-			has_error := False
 			create Result.make
-			if is_r_installed then
-				l_ptr := crf_lang2 (item, a_sexp1.item, a_sexp2.item)
-				if l_ptr /= default_pointer then
-					create Result.make_by_pointer (l_ptr)
-				else
-					has_error := True
-				end
+			l_ptr := Rf_allocVector (item, a_type, a_len)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
 			end
 		end
 
-	Rf_allocVector (a_type: INTEGER_64; a_len: INTEGER_64): R_SEXP
+	try_eval (a_sexp1, a_sexp2: R_SEXP; a_error: TYPED_POINTER[INTEGER]): R_SEXP
 		local
 			l_ptr: POINTER
 		do
-			has_error := False
 			create Result.make
-			if is_r_installed then
-				l_ptr := cRf_allocVector (item, a_type, a_len)
-				if l_ptr /= default_pointer then
-					create Result.make_by_pointer (l_ptr)
-				else
-					has_error := True
-				end
+			l_ptr := R_tryEval (item, a_sexp1.item, a_sexp2.item, a_error)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
 			end
 		end
 
-	R_GlobalEnv: R_SEXP
+	integer (a_sexp: R_SEXP): R_INTEGER
 		local
 			l_ptr: POINTER
 		do
-			has_error := False
 			create Result.make
-			if is_r_installed then
-				l_ptr := cR_GlobalEnv (item)
-				if l_ptr /= default_pointer then
-					create Result.make_by_pointer (l_ptr)
-				else
-					has_error := True
-				end
+			l_ptr := R_integer (item, a_sexp.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
 			end
 		end
 
-	R_try_eval (a_sexp1, a_sexp2: R_SEXP): R_SEXP
+	real (a_sexp: R_SEXP): R_REAL
 		local
 			l_ptr: POINTER
-			error: INTEGER
 		do
-			has_error := False
 			create Result.make
-			if is_r_installed then
-				l_ptr := cR_tryeval (item, a_sexp1.item, a_sexp2.item, $error)
-				if l_ptr /= default_pointer then
-					create Result.make_by_pointer (l_ptr)
-				else
-					has_error := True
-				end
+			l_ptr := R_real (item, a_sexp.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
 			end
 		end
 
-	R_integer (a_sexp: R_SEXP): POINTER
+	length (a_sexp: R_SEXP): INTEGER
+			--  length of a vector.
 		do
-			if is_r_installed then
-				Result := cR_integer (item, a_sexp.item)
-			end
+			Result := Rf_length (item, a_sexp.item)
 		end
 
-	R_real (a_sexp: R_SEXP): POINTER
+feature -- Access: Rinternals - Evaluation Environment		
+
+	global_env: R_SEXP
+			-- The "global" environment		
+		local
+			l_ptr: POINTER
 		do
-			if is_r_installed then
-				Result := cr_real (item, a_sexp.item)
+			create Result.make
+			l_ptr := R_GlobalEnv (item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
 			end
 		end
 
-feature -- Pointer Protection and Unprotection
 
-	Rf_protect (a_sexp: R_SEXP): R_SEXP
+feature -- Pointer Protection and Unprotection: Rinternals
+
+	protect (a_sexp: R_SEXP): R_SEXP
 			-- Put the `a_sepx` R object to the short-term
 			-- stack of objects protected from garbase collection
 		local
 			l_ptr: POINTER
 		do
-			has_error := False
 			create Result.make
-			if is_r_installed then
-				l_ptr := cRf_protect (item, a_sexp.item)
-				if l_ptr /= default_pointer then
-					create Result.make_by_pointer (l_ptr)
-				else
-					has_error := True
-				end
+			l_ptr := Rf_protect (item, a_sexp.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
 			end
 		end
 
-	Rf_unprotect (n: INTEGER)
+	unprotect (n: INTEGER)
 			-- Release the `n` objects last added to the protection stack.
 		local
 			l_ptr: POINTER
 		do
-			if is_r_installed then
-				cRf_unprotect (item, n)
-			end
+			Rf_unprotect (item, n)
 		end
 
 feature {NONE} -- C API
@@ -264,7 +242,8 @@ feature {NONE} -- C API
 				HMODULE user32_module = (HMODULE) $a_handle;
 				Rf_initEmbeddedR = GetProcAddress (user32_module, "Rf_initEmbeddedR");
 				if (Rf_initEmbeddedR) {
-					char *r_argv[] = { "R", "--silent" };
+					//char *r_argv[] = { "R", "--silent" };
+					 char *r_argv[] = { (char *) "REmbedded", (char *) "--slave" };
 					return (FUNCTION_CAST_TYPE(int, STDAPIVCALLTYPE, (int, char*)) Rf_initEmbeddedR) ( 2, r_argv );
 				} else {
 					return -1;
@@ -291,8 +270,8 @@ feature {NONE} -- C API
 			]"
 		end
 
-	cR_tryEval (a_handle: POINTER; a_sexp1, a_sexp2: POINTER; error: POINTER): POINTER
-			-- Defined asSEXP	 Rf_lang2(SEXP, SEXP);
+	R_tryEval (a_handle: POINTER; a_sexp1, a_sexp2: POINTER; error: TYPED_POINTER [INTEGER]): POINTER
+			-- Defined as SEXP Rf_lang2(SEXP, SEXP);
 		require
 			a_api_exists: a_handle /= default_pointer
 		external
@@ -310,7 +289,7 @@ feature {NONE} -- C API
 			]"
 		end
 
-	cR_GlobalEnv (a_handle: POINTER): POINTER
+	R_GlobalEnv (a_handle: POINTER): POINTER
 			-- LibExtern SEXP	R_GlobalEnv;
 			-- The "global" environment
 		require
@@ -330,7 +309,7 @@ feature {NONE} -- C API
 			]"
 		end
 
-	cRf_install (a_handle: POINTER; a_ptr: POINTER): POINTER
+	Rf_install (a_handle: POINTER; a_ptr: POINTER): POINTER
 			-- Defined as SEXP Rf_install(const char *);
 		require
 			a_api_exists: a_handle /= default_pointer
@@ -349,8 +328,8 @@ feature {NONE} -- C API
 			]"
 		end
 
-	cRf_lang2 (a_handle: POINTER; a_sexp1, a_sexp2: POINTER): POINTER
-			-- Defined asSEXP	 Rf_lang2(SEXP, SEXP);
+	Rf_lang2 (a_handle: POINTER; a_sexp1, a_sexp2: POINTER): POINTER
+			-- Defined asSEXP Rf_lang2(SEXP, SEXP);
 		require
 			a_api_exists: a_handle /= default_pointer
 		external
@@ -368,7 +347,7 @@ feature {NONE} -- C API
 			]"
 		end
 
-	cRf_allocVector (a_handle: POINTER; a_type: INTEGER_64; a_leng: INTEGER_64): POINTER
+	Rf_allocVector (a_handle: POINTER; a_type: INTEGER_64; a_leng: INTEGER_64): POINTER
 			-- Defined asSEXP	 Rf_lang2(SEXP, SEXP);
 		require
 			a_api_exists: a_handle /= default_pointer
@@ -387,7 +366,7 @@ feature {NONE} -- C API
 			]"
 		end
 
-	cRf_protect (a_handle: POINTER; a_ptr: POINTER): POINTER
+	Rf_protect (a_handle: POINTER; a_ptr: POINTER): POINTER
 			-- Defined as SEXP Rf_protect(SEXP);
 		require
 			a_api_exists: a_handle /= default_pointer
@@ -406,7 +385,7 @@ feature {NONE} -- C API
 			]"
 		end
 
-	cRf_unprotect (a_handle: POINTER; a_val: INTEGER)
+	Rf_unprotect (a_handle: POINTER; a_val: INTEGER)
 			-- Defined UNPROTECT(n)	Rf_unprotect(n)
 		require
 			a_api_exists: a_handle /= default_pointer
@@ -423,7 +402,7 @@ feature {NONE} -- C API
 			]"
 		end
 
-	cRf_mkString (a_handle: POINTER; a_ptr: POINTER): POINTER
+	Rf_mkString (a_handle: POINTER; a_ptr: POINTER): POINTER
 			-- Defined as SEXP Rf_mkString(const char *);
 		require
 			a_api_exists: a_handle /= default_pointer
@@ -474,7 +453,7 @@ feature {NONE} -- C API
 			]"
 		end
 
-	cR_integer (a_handle: POINTER; arg: POINTER): POINTER
+	R_integer (a_handle: POINTER; arg: POINTER): POINTER
 		external
 			"C inline use <Rinternals.h>"
 		alias
@@ -490,7 +469,7 @@ feature {NONE} -- C API
 			]"
 		end
 
-	cR_real (a_handle: POINTER; arg: POINTER): POINTER
+	R_real (a_handle: POINTER; arg: POINTER): POINTER
 		external
 			"C inline use <Rinternals.h>"
 		alias
@@ -506,108 +485,21 @@ feature {NONE} -- C API
 			]"
 		end
 
-	cR_real_value (a_handle: POINTER; arg: POINTER; i: INTEGER): REAL_64
+	Rf_length (a_handle: POINTER; arg: POINTER): INTEGER
+			-- R_len_t  Rf_length(SEXP);
 		external
 			"C inline use <Rinternals.h>"
 		alias
 			"[
-				return *(double *) $arg + $i;
-			]"
-		end
-
-	copy_integer_array_to_r (a_handle: POINTER; arg: POINTER; a: POINTER; alen: INTEGER)
-		external
-			"C inline use <Rinternals.h>"
-		alias
-			"[
-				FARPROC ptr = NULL;
+				FARPROC Rf_length = NULL;
 				HMODULE user32_module = (HMODULE) $a_handle;
-				ptr = GetProcAddress (user32_module, "DATAPTR");
-				if (ptr) {
-					memcpy((int *)(*ptr)((SEXP)$arg), $a, $alen * sizeof(int));
+				Rf_length = GetProcAddress (user32_module, "Rf_length");
+				if (Rf_length) {
+					return (FUNCTION_CAST_TYPE(R_len_t, STDAPIVCALLTYPE, (SEXP)) Rf_length) ($arg);
+				} else {
+					return 0;
 				}
 			]"
-		end
-
-	cRvector_elt (a_handle: POINTER; arg: POINTER; i: INTEGER): POINTER
-		external
-			"C inline use <Rinternals.h>"
-		alias
-			"[
-				FARPROC ptr = NULL;
-				HMODULE user32_module = (HMODULE) $a_handle;
-				ptr = GetProcAddress (user32_module, "DATAPTR");
-				if (ptr) {
-					return  (((SEXP *)((*ptr)((SEXP)$arg)))[$i]);
-				}
-			]"
-		end
-
-feature -- R version
-
-	R_version: INTEGER
-		require
-			a_api_exists: item /= default_pointer
-		external
-			"C inline use <Rversion.h>"
-		alias
-			"R_VERSION"
-		end
-
-feature {NONE} -- C Rversion
-
-	c_r_nick: POINTER
-		require
-			a_api_exists: item /= default_pointer
-		external
-			"C inline use <Rversion.h>"
-		alias
-			"R_NICK"
-		end
-
-	c_r_major: POINTER
-		require
-			a_api_exists: item /= default_pointer
-		external
-			"C inline use <Rversion.h>"
-		alias
-			"R_MAJOR"
-		end
-
-	c_r_minor: POINTER
-		require
-			a_api_exists: item /= default_pointer
-		external
-			"C inline use <Rversion.h>"
-		alias
-			"R_MINOR"
-		end
-
-	c_r_year: POINTER
-		require
-			a_api_exists: item /= default_pointer
-		external
-			"C inline use <Rversion.h>"
-		alias
-			"R_YEAR"
-		end
-
-	c_r_month: POINTER
-		require
-			a_api_exists: item /= default_pointer
-		external
-			"C inline use <Rversion.h>"
-		alias
-			"R_MONTH"
-		end
-
-	c_r_day: POINTER
-		require
-			a_api_exists: item /= default_pointer
-		external
-			"C inline use <Rversion.h>"
-		alias
-			"R_DAY"
 		end
 
 end

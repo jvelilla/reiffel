@@ -14,7 +14,7 @@ feature -- Initialization
 
 		do
 			test_version
---			test_initialize_r
+			test_initialize_r
 			test_call_r_from_eiffel
 		end
 
