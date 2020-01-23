@@ -18,17 +18,43 @@
 				<platform value="windows"/>
 			</condition>
 		</external_include>
-		<external_include location="--">
+		<external_include location="/usr/share/R/include">
 			<condition>
-				<platform value="unix"/>
+				<platform excluded_value="windows"/>
 			</condition>
 		</external_include>
-		<external_object location="--">
+
+		<!--external_include location="`pkg-config --cflags libR`">
 			<condition>
-				<platform value="unix"/>
+				<platform excluded_value="windows"/>
 			</condition>
-		</external_object>
+		</external_include -->
+
+		<!--external_object location="`pkg-config --libs libR`">
+			<condition>
+				<platform excluded_value="windows"/>
+			</condition>
+		</external_object-->
+		<external_linker_flag value="`pkg-config --libs libR`">
+			<condition>
+				<platform excluded_value="windows"/>
+			</condition>
+		</external_linker_flag>
+
 		<library name="base" location="$ISE_LIBRARY\library\base\base.ecf"/>
-		<cluster name="reiffel" location=".\" recursive="true"/>
+		<cluster name="reiffel" location=".\" recursive="true">
+			<file_rule>
+				<exclude>/implementation/linux$</exclude>
+				<condition>
+					<platform value="windows"/>
+				</condition>
+			</file_rule>
+			<file_rule>
+				<exclude>/implementation/windows$</exclude>
+				<condition>
+					<platform excluded_value="windows"/>
+				</condition>
+			</file_rule>
+		</cluster>	
 	</target>
 </system>
