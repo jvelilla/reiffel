@@ -36,6 +36,11 @@ feature -- Access: Rembedded
 
 feature -- Access: Rinternals Function.
 
+	nil_value: R_SEXP
+			-- The nil object
+		deferred
+		end
+
 	install (a_str: STRING): R_SEXP
 		deferred
 		end
@@ -52,7 +57,7 @@ feature -- Access: Rinternals Function.
 		deferred
 		end
 
-	try_eval (a_sexp1, a_sexp2: R_SEXP; a_error: TYPED_POINTER[INTEGER]): R_SEXP
+	try_eval (a_sexp1, a_sexp2: R_SEXP; a_error: POINTER): R_SEXP
 		deferred
 		end
 
@@ -69,6 +74,28 @@ feature -- Access: Rinternals Function.
 		deferred
 		end
 
+	mk_char (a_str: STRING): R_SEXP
+			-- character vector
+		deferred
+		end
+
+	set_string_etl (a_x: R_SEXP; a_index: INTEGER; a_v: R_SEXP)
+		deferred
+		end
+
+	vector_elt (a_sexp: R_SEXP; a_index: INTEGER): R_SEXP
+		deferred
+		end
+
+	print_value (a_sexp: R_SEXP)
+		deferred
+		end
+
+feature -- Acess: R_ext/Parse
+
+	parse_vector (a_sexp: R_SEXP; a_int: INTEGER; a_status: POINTER; a_sexp2: R_SEXP): R_SEXP
+		deferred
+		end
 
 feature -- Access: Rinternals - Evaluation Environment
 

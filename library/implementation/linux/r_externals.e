@@ -48,6 +48,17 @@ feature -- Access
 
 feature -- Access: Rinternals Functions
 
+	nil_value: R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := R_nilValue
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
 	install (a_str: STRING): R_SEXP
 		local
 			c_str: C_STRING
@@ -96,7 +107,7 @@ feature -- Access: Rinternals Functions
 			end
 		end
 
-	try_eval (a_sexp1, a_sexp2: R_SEXP; a_error: TYPED_POINTER[INTEGER]): R_SEXP
+	try_eval (a_sexp1, a_sexp2: R_SEXP; a_error:POINTER): R_SEXP
 		local
 			l_ptr: POINTER
 		do
@@ -133,6 +144,52 @@ feature -- Access: Rinternals Functions
 			--  length of a vector.
 		do
 			Result := Rf_length (a_sexp.item)
+		end
+
+	mk_char (a_str: STRING): R_SEXP
+			-- character vector
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := Rf_mkChar ((create{C_STRING}.make (a_str)).item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	set_string_etl (a_x: R_SEXP; a_index: INTEGER; a_v: R_SEXP)
+		do
+			R_SET_STRING_ELT (a_x.item, a_index, a_v.item)
+		end
+
+feature -- Acess: R_ext/Parse
+
+	parse_vector (a_sexp: R_SEXP; a_int: INTEGER; a_status: POINTER; a_sexp2: R_SEXP): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := r_parsevector (a_sexp.item, a_int,a_status, a_sexp2.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	vector_elt (a_sexp: R_SEXP; a_index: INTEGER): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := R_VECTOR_ELT (a_sexp.item, a_index)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	print_value (a_sexp: R_SEXP)
+		do
+			rf_printvalue (a_sexp.item)
 		end
 
 feature -- Access: Rinternals - Evaluation Environment
@@ -206,6 +263,18 @@ feature {NONE} -- C externals:Rembedded
 
 feature {NONE} -- C externals:Rinternals
 
+	R_NilValue : POINTER
+			-- Defined LibExtern SEXP	R_NilValue;	    /* The nil object */
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				 R_NilValue
+			]"
+		end
+
+
+
 	Rf_install (p: POINTER): POINTER
 			-- Defined SEXP Rf_install(const char *)
 		external
@@ -276,7 +345,7 @@ feature {NONE} -- C externals:Rinternals
 			]"
 		end
 
-	R_tryEval (a_sexp1, a_sexp2: POINTER; a_error: TYPED_POINTER [INTEGER]): POINTER
+	R_tryEval (a_sexp1, a_sexp2: POINTER; a_error: POINTER): POINTER
 			-- Defined as SEXP R_tryEval(SEXP, SEXP, int *);
 		external
 			"C inline use <Rinternals.h>"
@@ -315,4 +384,59 @@ feature {NONE} -- C externals:Rinternals
 				return Rf_length((SEXP)$a_sexp);
 			]"
 		end
+
+	Rf_mkChar (a_str: POINTER): POINTER
+			-- Defined as SEXP Rf_mkChar(const char* x);	
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				return Rf_mkChar((const char*) $a_str);
+			]"
+		end
+
+	R_SET_STRING_ELT (a_x: POINTER; a_i: INTEGER; a_v: POINTER)
+			-- Defined as void SET_STRING_ELT(SEXP x, R_xlen_t i, SEXP v);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				SET_STRING_ELT((SEXP) $a_x, (R_xlen_t)$a_i, (SEXP)$a_v);
+			]"
+		end
+
+	R_VECTOR_ELT (a_sexp: POINTER; a_index: INTEGER): POINTER
+			-- Defined as VECTOR_ELT(x,i)	((SEXP *) DATAPTR(x))[i]	
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				return (SEXP *) $a_sexp + $a_index;
+			]"
+		end
+
+	Rf_PrintValue (a_sexp: POINTER)
+			-- Defined as void Rf_PrintValue(SEXP);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				Rf_PrintValue((SEXP)$a_sexp)
+			]"
+		end
+
+feature {NONE} -- C externals:R_ext/Parse
+
+	R_ParseVector (a_sexp: POINTER; a_int: INTEGER; a_status: POINTER; a_sexp2: POINTER): POINTER
+			-- Defined as SEXP R_ParseVector(SEXP, int, ParseStatus *, SEXP);
+		external
+			"C inline use <reiffel.h>"
+		alias
+			"[
+				return R_ParseVector((SEXP)$a_sexp, $a_int, (ParseStatus *)$a_status, (SEXP)$a_sexp2);
+			]"
+		end
+
+
+
 end
