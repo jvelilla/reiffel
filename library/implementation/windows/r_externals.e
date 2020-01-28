@@ -103,6 +103,18 @@ feature -- Access: Rinternals Function.
 			end
 		end
 
+	nil_value: R_SEXP
+			-- The nil object
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := R_NilValue (item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
 	install (a_str: STRING): R_SEXP
 		local
 			c_str: C_STRING
@@ -151,7 +163,7 @@ feature -- Access: Rinternals Function.
 			end
 		end
 
-	try_eval (a_sexp1, a_sexp2: R_SEXP; a_error: TYPED_POINTER[INTEGER]): R_SEXP
+	try_eval (a_sexp1, a_sexp2: R_SEXP; a_error:POINTER): R_SEXP
 		local
 			l_ptr: POINTER
 		do
@@ -188,6 +200,52 @@ feature -- Access: Rinternals Function.
 			--  length of a vector.
 		do
 			Result := Rf_length (item, a_sexp.item)
+		end
+
+	mk_char (a_str: STRING): R_SEXP
+			-- character vector
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := Rf_mkChar (item, (create {C_STRING}.make (a_str)).item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	set_string_etl (a_x: R_SEXP; a_index: INTEGER; a_v: R_SEXP)
+		do
+			R_SET_STRING_ELT (item, a_x.item, a_index, a_v.item)
+		end
+
+	vector_elt (a_sexp: R_SEXP; a_index: INTEGER): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := R_VECTOR_ELT (a_sexp.item, a_index)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	print_value (a_sexp: R_SEXP)
+		do
+			Rf_PrintValue (item, a_sexp.item)
+		end
+
+feature -- Acess: R_ext/Parse
+
+	parse_vector (a_sexp: R_SEXP; a_int: INTEGER; a_status: POINTER; a_sexp2: R_SEXP): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := R_ParseVector (item, a_sexp.item, a_int, a_status, a_sexp2.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
 		end
 
 feature -- Access: Rinternals - Evaluation Environment		
@@ -270,7 +328,7 @@ feature {NONE} -- C API
 			]"
 		end
 
-	R_tryEval (a_handle: POINTER; a_sexp1, a_sexp2: POINTER; error: TYPED_POINTER [INTEGER]): POINTER
+	R_tryEval (a_handle: POINTER; a_sexp1, a_sexp2: POINTER; error: POINTER): POINTER
 			-- Defined as SEXP Rf_lang2(SEXP, SEXP);
 		require
 			a_api_exists: a_handle /= default_pointer
@@ -498,6 +556,103 @@ feature {NONE} -- C API
 					return (FUNCTION_CAST_TYPE(R_len_t, STDAPIVCALLTYPE, (SEXP)) Rf_length) ($arg);
 				} else {
 					return 0;
+				}
+			]"
+		end
+
+	R_NilValue (a_handle: POINTER): POINTER
+			-- LibExtern SEXP	R_NilValue;	
+			-- The nil object
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				SEXP *R_NilValue = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				R_NilValue = GetProcAddress (user32_module, "R_NilValue");
+				if (R_NilValue) {
+					return *R_NilValue;
+				} else {
+					return NULL;
+				}
+			]"
+		end
+
+	Rf_mkChar (a_handle: POINTER; arg: POINTER): POINTER
+			-- SEXP Rf_mkChar(const char *);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC Rf_mkChar = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				Rf_mkChar = GetProcAddress (user32_module, "Rf_mkChar");
+				if (Rf_mkChar) {
+					return (FUNCTION_CAST_TYPE(SEXP, STDAPIVCALLTYPE, (SEXP)) Rf_mkChar) ($arg);
+				} else {
+					return NULL;
+				}
+			]"
+		end
+
+
+	R_SET_STRING_ELT (a_handle: POINTER; a_x: POINTER; a_i:INTEGER; a_v:POINTER)
+			-- void SET_STRING_ELT(SEXP x, R_xlen_t i, SEXP v);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC SET_STRING_ELT = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				SET_STRING_ELT = GetProcAddress (user32_module, "SET_STRING_ELT");
+				if (SET_STRING_ELT) {
+					(FUNCTION_CAST_TYPE(void, STDAPIVCALLTYPE, (SEXP, R_xlen_t, SEXP )) SET_STRING_ELT) ($a_x, $a_i, $a_v);
+				}
+			]"
+		end
+
+	R_VECTOR_ELT (a_sexp: POINTER; a_index: INTEGER): POINTER
+			--  VECTOR_ELT(x,i)	((SEXP *) DATAPTR(x))[i]
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				return (SEXP *) $a_sexp + $a_index;
+			]"
+		end
+
+
+	Rf_PrintValue (a_handle: POINTER; a_val:POINTER)
+			-- void Rf_PrintValue(SEXP);	
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC Rf_PrintValue = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				Rf_PrintValue = GetProcAddress (user32_module, "Rf_PrintValue");
+				if (Rf_PrintValue) {
+					(FUNCTION_CAST_TYPE(void, STDAPIVCALLTYPE, (SEXP)) Rf_PrintValue) ( $a_val );
+				}
+			]"
+		end
+
+	R_ParseVector (a_handle: POINTER; arg: POINTER; int: INTEGER; status: POINTER; arg2: POINTER): POINTER
+			-- SEXP R_ParseVector(SEXP, int, ParseStatus *, SEXP);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				// Workaround can't include the header <R-ext/Parse.h>, since 
+				// it cause a C syntaxt error, maybe it`s caused by a circular include dependency.
+				// or we need to use GetProcAddress to get the enum.
+				FARPROC R_ParseVector = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				R_ParseVector = GetProcAddress (user32_module, "R_ParseVector");
+				if (R_ParseVector) {
+					return (FUNCTION_CAST_TYPE(SEXP, STDAPIVCALLTYPE, (SEXP, int, int *, SEXP)) R_ParseVector) ($arg, $int, $status, $arg2);
+				} else {
+					return NULL;
 				}
 			]"
 		end
