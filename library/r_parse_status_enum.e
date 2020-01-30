@@ -8,40 +8,40 @@ class
 
 feature -- Access
 
-	PARSE_NULL: INTEGER
-		external
-			"C inline use <R_ext/Parse.h>"
-		alias
-			"PARSE_NULL"
-		end
+	PARSE_NULL: INTEGER = 0
+--		external
+--			"C inline use <R_ext/Parse.h>"
+--		alias
+--			"PARSE_NULL"
+--		end
 
-	PARSE_OK: INTEGER
-		external
-			"C inline use <R_ext/Parse.h>"
-		alias
-			"PARSE_OK"
-		end
+	PARSE_OK: INTEGER = 1
+--		external
+--			"C inline use <R_ext/Parse.h>"
+--		alias
+--			"PARSE_OK"
+--		end
 
-	PARSE_INCOMPLETE: INTEGER
-		external
-			"C inline use <R_ext/Parse.h>"
-		alias
-			"PARSE_INCOMPLETE"
-		end
+	PARSE_INCOMPLETE: INTEGER = 2
+--		external
+--			"C inline use <R_ext/Parse.h>"
+--		alias
+--			"PARSE_INCOMPLETE"
+--		end
 
-	PARSE_ERROR: INTEGER
-		external
-			"C inline use <R_ext/Parse.h>"
-		alias
-			"PARSE_ERROR"
-		end
+	PARSE_ERROR: INTEGER = 3
+--		external
+--			"C inline use <R_ext/Parse.h>"
+--		alias
+--			"PARSE_ERROR"
+--		end
 
-	PARSE_EOF: INTEGER
-		external
-			"C inline use <R_ext/Parse.h>"
-		alias
-			"PARSE_EOF"
-		end
+	PARSE_EOF: INTEGER = 4
+--		external
+--			"C inline use <R_ext/Parse.h>"
+--		alias
+--			"PARSE_EOF"
+--		end
 
 feature -- Contract Support
 
