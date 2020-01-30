@@ -91,6 +91,48 @@ feature -- Access: Rinternals Function.
 		deferred
 		end
 
+	eval (a_sexp1, a_sexp2: R_SEXP): R_SEXP
+		deferred
+		end
+
+	type_of (a_sexp: R_SEXP): INTEGER
+		deferred
+		end
+
+	find_fund (a_sexp: R_SEXP; a_sexp2: R_SEXP): R_SEXP
+		deferred
+		end
+
+	scalar_integer (a_integer: INTEGER): R_SEXP
+		deferred
+		end
+
+feature -- Access: Rinternals List access functions
+
+	set_car (a_x: R_SEXP; a_y: R_SEXP): R_SEXP
+		deferred
+		end
+
+	set_cdr (a_x: R_SEXP; a_y: R_SEXP): R_SEXP
+		deferred
+		end
+
+	set_cadr (a_x: R_SEXP; a_y: R_SEXP): R_SEXP
+		deferred
+		end
+
+	set_caddr (a_x: R_SEXP; a_y: R_SEXP): R_SEXP
+		deferred
+		end
+
+	set_cadddr (a_x: R_SEXP; a_y: R_SEXP): R_SEXP
+		deferred
+		end
+
+	set_cad4r (a_x: R_SEXP; a_y: R_SEXP): R_SEXP
+		deferred
+		end
+
 feature -- Acess: R_ext/Parse
 
 	parse_vector (a_sexp: R_SEXP; a_int: INTEGER; a_status: POINTER; a_sexp2: R_SEXP): R_SEXP
