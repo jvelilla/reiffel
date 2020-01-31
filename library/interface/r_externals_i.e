@@ -99,7 +99,7 @@ feature -- Access: Rinternals Function.
 		deferred
 		end
 
-	find_fund (a_sexp: R_SEXP; a_sexp2: R_SEXP): R_SEXP
+	find_fun (a_sexp: R_SEXP; a_sexp2: R_SEXP): R_SEXP
 		deferred
 		end
 

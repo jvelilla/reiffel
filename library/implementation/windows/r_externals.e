@@ -17,7 +17,6 @@ inherit
 			default_create
 		end
 
-
 create
 	default_create
 
@@ -87,7 +86,6 @@ feature -- Access: Rembedded
 		do
 			R_setStartTime (item)
 		end
-
 
 feature -- Access: Rinternals Function.
 
@@ -163,7 +161,7 @@ feature -- Access: Rinternals Function.
 			end
 		end
 
-	try_eval (a_sexp1, a_sexp2: R_SEXP; a_error:POINTER): R_SEXP
+	try_eval (a_sexp1, a_sexp2: R_SEXP; a_error: POINTER): R_SEXP
 		local
 			l_ptr: POINTER
 		do
@@ -224,7 +222,7 @@ feature -- Access: Rinternals Function.
 			l_ptr: POINTER
 		do
 			create Result.make
-			l_ptr := R_VECTOR_ELT (a_sexp.item, a_index)
+			l_ptr := R_VECTOR_ELT (item, a_sexp.item, a_index)
 			if l_ptr /= default_pointer then
 				create Result.make_by_pointer (l_ptr)
 			end
@@ -233,6 +231,112 @@ feature -- Access: Rinternals Function.
 	print_value (a_sexp: R_SEXP)
 		do
 			Rf_PrintValue (item, a_sexp.item)
+		end
+
+	eval (a_sexp1, a_sexp2: R_SEXP): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := Rf_eval (item, a_sexp1.item, a_sexp2.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	type_of (a_sexp: R_SEXP): INTEGER
+		do
+			Result := TYPEOF (item, a_sexp.item)
+		end
+
+	find_fun (a_sexp: R_SEXP; a_sexp2: R_SEXP): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := Rf_findFun (item, a_sexp.item, a_sexp2.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	scalar_integer (a_integer: INTEGER): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := Rf_ScalarInteger (item, a_integer)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+feature -- Access: Rinternals List access functions
+
+	set_car (a_x: R_SEXP; a_y: R_SEXP): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := setcar (item, a_x.item, a_y.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	set_cdr (a_x: R_SEXP; a_y: R_SEXP): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := setcdr (item, a_x.item, a_y.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	set_cadr (a_x: R_SEXP; a_y: R_SEXP): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := setcadr (item, a_x.item, a_y.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	set_caddr (a_x: R_SEXP; a_y: R_SEXP): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := setcaddr (item, a_x.item, a_y.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	set_cadddr (a_x: R_SEXP; a_y: R_SEXP): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := setcadddr (item, a_x.item, a_y.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
+		end
+
+	set_cad4r (a_x: R_SEXP; a_y: R_SEXP): R_SEXP
+		local
+			l_ptr: POINTER
+		do
+			create Result.make
+			l_ptr := setcad4r (item, a_x.item, a_y.item)
+			if l_ptr /= default_pointer then
+				create Result.make_by_pointer (l_ptr)
+			end
 		end
 
 feature -- Acess: R_ext/Parse
@@ -248,10 +352,10 @@ feature -- Acess: R_ext/Parse
 			end
 		end
 
-feature -- Access: Rinternals - Evaluation Environment		
+feature -- Access: Rinternals - Evaluation Environment
 
 	global_env: R_SEXP
-			-- The "global" environment		
+			-- The "global" environment
 		local
 			l_ptr: POINTER
 		do
@@ -261,7 +365,6 @@ feature -- Access: Rinternals - Evaluation Environment
 				create Result.make_by_pointer (l_ptr)
 			end
 		end
-
 
 feature -- Pointer Protection and Unprotection: Rinternals
 
@@ -280,8 +383,6 @@ feature -- Pointer Protection and Unprotection: Rinternals
 
 	unprotect (n: INTEGER)
 			-- Release the `n` objects last added to the protection stack.
-		local
-			l_ptr: POINTER
 		do
 			Rf_unprotect (item, n)
 		end
@@ -561,7 +662,7 @@ feature {NONE} -- C API
 		end
 
 	R_NilValue (a_handle: POINTER): POINTER
-			-- LibExtern SEXP	R_NilValue;	
+			-- LibExtern SEXP	R_NilValue;
 			-- The nil object
 		external
 			"C inline use <Rinternals.h>"
@@ -595,8 +696,7 @@ feature {NONE} -- C API
 			]"
 		end
 
-
-	R_SET_STRING_ELT (a_handle: POINTER; a_x: POINTER; a_i:INTEGER; a_v:POINTER)
+	R_SET_STRING_ELT (a_handle: POINTER; a_x: POINTER; a_i: INTEGER; a_v: POINTER)
 			-- void SET_STRING_ELT(SEXP x, R_xlen_t i, SEXP v);
 		external
 			"C inline use <Rinternals.h>"
@@ -611,19 +711,25 @@ feature {NONE} -- C API
 			]"
 		end
 
-	R_VECTOR_ELT (a_sexp: POINTER; a_index: INTEGER): POINTER
+	R_VECTOR_ELT (a_handle: POINTER; a_sexp: POINTER; a_index: INTEGER): POINTER
 			--  VECTOR_ELT(x,i)	((SEXP *) DATAPTR(x))[i]
 		external
 			"C inline use <Rinternals.h>"
 		alias
 			"[
-				return (SEXP *) $a_sexp + $a_index;
+				FARPROC VECTOR_ELT = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				VECTOR_ELT = GetProcAddress (user32_module, "VECTOR_ELT");
+				if (VECTOR_ELT) {
+					return (FUNCTION_CAST_TYPE(SEXP, STDAPIVCALLTYPE, (SEXP, R_xlen_t)) VECTOR_ELT) ( $a_sexp, $a_index );
+				} else {
+					return NULL;
+				}
 			]"
 		end
 
-
-	Rf_PrintValue (a_handle: POINTER; a_val:POINTER)
-			-- void Rf_PrintValue(SEXP);	
+	Rf_PrintValue (a_handle: POINTER; a_val: POINTER)
+			-- void Rf_PrintValue(SEXP);
 		external
 			"C inline use <Rinternals.h>"
 		alias
@@ -633,6 +739,23 @@ feature {NONE} -- C API
 				Rf_PrintValue = GetProcAddress (user32_module, "Rf_PrintValue");
 				if (Rf_PrintValue) {
 					(FUNCTION_CAST_TYPE(void, STDAPIVCALLTYPE, (SEXP)) Rf_PrintValue) ( $a_val );
+				}
+			]"
+		end
+
+	Rf_eval (a_handle: POINTER; a_x: POINTER; a_y: POINTER): POINTER
+			-- SEXP Rf_eval(SEXP, SEXP);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC Rf_eval = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				Rf_eval = GetProcAddress (user32_module, "Rf_eval");
+				if (Rf_eval) {
+					return (FUNCTION_CAST_TYPE(SEXP, STDAPIVCALLTYPE, (SEXP, SEXP)) Rf_eval) ( $a_x, $a_y );
+				} else {
+					return NULL;
 				}
 			]"
 		end
@@ -657,4 +780,158 @@ feature {NONE} -- C API
 			]"
 		end
 
+	TYPEOF (a_handle: POINTER; a_x: POINTER): INTEGER
+			-- TYPEOF(x)	((x)->sxpinfo.type)
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC TYPEOF = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				TYPEOF = GetProcAddress (user32_module, "TYPEOF");
+				if (TYPEOF) {
+					return (FUNCTION_CAST_TYPE(SEXPTYPE, STDAPIVCALLTYPE, (SEXP)) TYPEOF) ($a_x);
+				} else {
+					return -1;
+				}
+			]"
+		end
+
+	Rf_findFun (a_handle: POINTER; a_x: POINTER; a_y: POINTER): POINTER
+			-- SEXP Rf_findFun(SEXP, SEXP);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC Rf_findFun = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				Rf_findFun = GetProcAddress (user32_module, "Rf_findFun");
+				if (Rf_findFun) {
+					return (FUNCTION_CAST_TYPE(SEXP, STDAPIVCALLTYPE, (SEXP,SEXP)) Rf_findFun) ($a_x, $a_y);
+				} else {
+					return NULL;
+				}
+			]"
+		end
+
+	Rf_ScalarInteger (a_handle: POINTER; a: INTEGER): POINTER
+			-- SEXP	 Rf_ScalarInteger(int);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC Rf_ScalarInteger = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				Rf_ScalarInteger = GetProcAddress (user32_module, "Rf_ScalarInteger");
+				if (Rf_ScalarInteger) {
+					return (FUNCTION_CAST_TYPE(SEXP, STDAPIVCALLTYPE, (int)) Rf_ScalarInteger) ($a);
+				} else {
+					return NULL;
+				}
+			]"
+		end
+
+
+	SETCAR (a_handle: POINTER; x: POINTER; y: POINTER): POINTER
+			-- SEXP SETCAR(SEXP x, SEXP y);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC SETCAR = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				SETCAR = GetProcAddress (user32_module, "SETCAR");
+				if (SETCAR) {
+					return (FUNCTION_CAST_TYPE(SEXP, STDAPIVCALLTYPE, (SEXP, SEXP)) SETCAR) ($x, $y);
+				} else {
+					return NULL;
+				}
+			]"
+		end
+
+	SETCDR (a_handle: POINTER; x: POINTER; y: POINTER): POINTER
+			-- SEXP SETCDR(SEXP x, SEXP y);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC SETCDR = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				SETCDR = GetProcAddress (user32_module, "SETCDR");
+				if (SETCDR) {
+					return (FUNCTION_CAST_TYPE(SEXP, STDAPIVCALLTYPE, (SEXP, SEXP)) SETCDR) ($x, $y);
+				} else {
+					return NULL;
+				}
+			]"
+		end
+
+
+	SETCADR (a_handle: POINTER; x: POINTER; y: POINTER): POINTER
+			-- SEXP SETCADR(SEXP x, SEXP y);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC SETCADR = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				SETCADR = GetProcAddress (user32_module, "SETCADR");
+				if (SETCADR) {
+					return (FUNCTION_CAST_TYPE(SEXP, STDAPIVCALLTYPE, (SEXP, SEXP)) SETCADR) ($x, $y);
+				} else {
+					return NULL;
+				}
+			]"
+		end
+
+	SETCADDR (a_handle: POINTER; x: POINTER; y: POINTER): POINTER
+			-- SEXP SETCADDR(SEXP x, SEXP y);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC SETCADDR = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				SETCADDR = GetProcAddress (user32_module, "SETCADDR");
+				if (SETCADDR) {
+					return (FUNCTION_CAST_TYPE(SEXP, STDAPIVCALLTYPE, (SEXP, SEXP)) SETCADDR) ($x, $y);
+				} else {
+					return NULL;
+				}
+			]"
+		end
+
+	SETCADDDR (a_handle: POINTER; x: POINTER; y: POINTER): POINTER
+			-- SEXP SETCADDDR(SEXP x, SEXP y);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC SETCADDDR = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				SETCADDDR = GetProcAddress (user32_module, "SETCADDDR");
+				if (SETCADDDR) {
+					return (FUNCTION_CAST_TYPE(SEXP, STDAPIVCALLTYPE, (SEXP, SEXP)) SETCADDDR) ($x, $y);
+				} else {
+					return NULL;
+				}
+			]"
+		end
+
+	SETCAD4R (a_handle: POINTER; x: POINTER; y: POINTER): POINTER
+			-- SEXP SETCAD4R(SEXP e, SEXP y);
+		external
+			"C inline use <Rinternals.h>"
+		alias
+			"[
+				FARPROC SETCAD4R = NULL;
+				HMODULE user32_module = (HMODULE) $a_handle;
+				SETCAD4R = GetProcAddress (user32_module, "SETCAD4R");
+				if (SETCAD4R) {
+					return (FUNCTION_CAST_TYPE(SEXP, STDAPIVCALLTYPE, (SEXP, SEXP)) SETCAD4R) ($x, $y);
+				} else {
+					return NULL;
+				}
+			]"
+		end
 end

@@ -123,7 +123,7 @@ feature -- Eval Expression
 		do
 				-- Create the R expressions "rnorm(10)" with the R API
 			expr := r.protect (r.alloc_vector ({R_INTERNALS_CONSTANTS}.langsxp, 2))
-			tmp := r.find_fund (r.install ("rnorm"), r.global_env)
+			tmp := r.find_fun (r.install ("rnorm"), r.global_env)
 			tmp := r.set_car (expr, tmp)
 			tmp := r.set_cadr (expr, r.scalar_integer (10))
 				-- Call it, and store the result in ret.
