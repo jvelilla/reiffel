@@ -179,7 +179,7 @@ feature -- Access: Rinternals Functions
 			Result := TYPEOF (a_sexp.item)
 		end
 
-	find_fund (a_sexp: R_SEXP; a_sexp2: R_SEXP): R_SEXP
+	find_fun (a_sexp: R_SEXP; a_sexp2: R_SEXP): R_SEXP
 		local
 			l_ptr: POINTER
 		do
